@@ -60,3 +60,15 @@ export const updateCustomer = async ({ id, body }: DataUpdateCustomer) => {
     console.log(error)
   }
 }
+export const uploadFiles = async (id: string, files: any) => {
+  try {
+    const formData = new FormData()
+    files.forEach((file: any) => {
+      formData.append('files', file)
+    })
+    const response = await adminInstance.post(`manager/company/${id}`, formData)
+    return response.data
+  } catch (error) {
+    console.log(error)
+  }
+}

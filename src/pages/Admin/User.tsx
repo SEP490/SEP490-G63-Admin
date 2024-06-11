@@ -10,11 +10,12 @@ import {
   ArrowUpOnSquareIcon,
   EllipsisVerticalIcon,
   LockOpenIcon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import { dataCustomer } from '~/common/dataConfig'
 import { statusRule } from '~/common/const/status'
-import { approveCustomer, banCustomer, getCustomer } from '~/services/customer.service'
+import { approveCustomer, banCustomer, getCustomer, uploadFiles } from '~/services/customer.service'
 import useToast from '~/hooks/useToast'
 import Expried from '~/components/Admin/Employee/Expried'
 import moment from 'moment'
@@ -33,6 +34,8 @@ const User = () => {
   const [banModal, setBanModal] = useState(false)
   const [extendModal, setExtendModal] = useState(false)
   const [approveModal, setApproveModal] = useState(false)
+  const [fileModal, setFileModal] = useState(false)
+  const [files, setFiles] = useState<any>([])
   const [startDate, setStartDate] = useState<Date | null>()
   const [endDate, setEndDate] = useState<Date | null>()
   const [page, setPage] = useState(0)
@@ -46,6 +49,9 @@ const User = () => {
     setExtendModal(false)
     setApproveModal(false)
     setSelectedCustomer(null)
+  }
+  function closeFileModal() {
+    setFileModal(false)
   }
   const totalMoney = useMemo(() => {
     return data.reduce((total: number, d: DataCustomer) => {
@@ -63,6 +69,8 @@ const User = () => {
     }
   }
   const handleApproveCompany = async () => {
+    console.log(selectedCustomer?.id)
+
     if (selectedCustomer?.id) {
       const response = await approveCustomer(selectedCustomer?.id)
       if (response) {
@@ -83,7 +91,35 @@ const User = () => {
   const handleOnSubmit = (e: any) => {
     e.preventDefault()
   }
+
+  const handleFileChange = (event: any) => {
+    const selectedFiles = Array.from(event.target.files)
+    setFiles([...files, ...selectedFiles])
+  }
+
+  const handleUpload = async () => {
+    console.log('Uploading files:', files)
+    if (files.length == 0) {
+      errorNotification('Vui lòng chọn ít nhất 1 file')
+      return
+    }
+    const response = await uploadFiles(selectedCustomer?.id as string, files)
+    if (response) {
+      successNotification('Tải file thành công')
+      closeFileModal()
+    } else errorNotification('Tải file thất bại')
+  }
+
+  const removeFile = (fileToRemove: any) => {
+    setFiles(files.filter((file: any) => file !== fileToRemove))
+  }
+
+  const removeAllFiles = () => {
+    setFiles([])
+  }
+
   if (!data) return <Loading />
+
   return (
     <div className='bg-[#e8eaed] h-full'>
       <div className='flex flex-wrap py-4'>
@@ -293,6 +329,10 @@ const User = () => {
                                 <Menu.Item>
                                   {({ active }) => (
                                     <button
+                                      onClick={() => {
+                                        setFileModal(true)
+                                        setSelectedCustomer(d)
+                                      }}
                                       title='Tải file'
                                       className={`${
                                         active ? 'bg-green-500 text-white' : 'text-gray-900'
@@ -326,6 +366,15 @@ const User = () => {
                 </tr>
               </tbody>
             </table>
+            <button
+              onClick={() => {
+                setFileModal(true)
+              }}
+              title='Tải file'
+              className={`${'text-gray-900'} group flex items-center gap-3 rounded-md px-2 py-2 text-sm bg-teal-500 text-white`}
+            >
+              <ArrowUpOnSquareIcon className='h-5' /> Tải file
+            </button>
           </div>
         </div>
       </div>
@@ -478,6 +527,72 @@ const User = () => {
                       </button>
                     </div>
                   </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+      <Transition appear show={fileModal} as={Fragment}>
+        <Dialog as='div' className='relative z-10 w-[90vw] overflow-y-auto' onClose={closeFileModal}>
+          <Transition.Child
+            as={Fragment}
+            enter='ease-out duration-300'
+            enterFrom='opacity-0'
+            enterTo='opacity-100'
+            leave='ease-in duration-200'
+            leaveFrom='opacity-100'
+            leaveTo='opacity-0'
+          >
+            <div className='fixed inset-0 bg-black/25' />
+          </Transition.Child>
+
+          <div className='fixed inset-0 overflow-y-auto max-h-50'>
+            <div className='flex min-h-full  items-center justify-center p-4 text-center'>
+              <Transition.Child
+                as={Fragment}
+                enter='ease-out duration-300'
+                enterFrom='opacity-0 scale-95'
+                enterTo='opacity-100 scale-100'
+                leave='ease-in duration-200'
+                leaveFrom='opacity-100 scale-100'
+                leaveTo='opacity-0 scale-95'
+              >
+                <Dialog.Panel className='w-[100vw] md:w-[40vw] max-h-[60vh] overflow-y-auto transform rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all'>
+                  <Dialog.Title as='h3' className='text-lg font-medium leading-6 text-gray-900'>
+                    <div className='flex justify-between items-center'>
+                      <p>Tải hợp đồng</p>
+                      <XMarkIcon className='h-5 w-5 mr-3 mb-3 cursor-pointer' onClick={closeFileModal} />
+                    </div>
+                  </Dialog.Title>
+                  <>
+                    <input className='rounded-md m-2' type='file' multiple onChange={handleFileChange} />
+                    <hr className='mb-2' />
+                    <div className='flex flex-wrap gap-2'>
+                      {files.map((file: any, index: any) => (
+                        <div key={index} className='bg-slate-200 rounded-full px-2 py-1'>
+                          {file.name}
+                          <span className='cursor-pointer ml-1' onClick={() => removeFile(file)}>
+                            ✖
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className='flex items-center mt-4 justify-center'>
+                      <button
+                        className='mx-4 bg-teal-500 p-2 rounded-md text-center text-white hover:bg-teal-800'
+                        onClick={() => handleUpload}
+                      >
+                        Tải lên
+                      </button>
+                      <button
+                        className='mx-4 bg-red-500 p-2 rounded-md text-center text-white hover:bg-red-800'
+                        onClick={removeAllFiles}
+                      >
+                        Xóa tất cả
+                      </button>
+                    </div>
+                  </>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
