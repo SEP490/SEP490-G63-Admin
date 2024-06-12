@@ -25,7 +25,7 @@ const Expried = ({ closeModal, selectedCustomer }: Iprops) => {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
       if (selectedCustomer?.id) {
-        const response = await extendService(selectedCustomer?.id, data.pricePlan)
+        const response = await extendService({ companyId: selectedCustomer?.id, pricePlanId: data.pricePlan })
         if (response) {
           successNotification('Gia hạn dịch vụ thành công')
           closeModal()

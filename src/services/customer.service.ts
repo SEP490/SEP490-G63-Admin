@@ -44,9 +44,9 @@ export const approveCustomer = async (id: string) => {
   }
 }
 
-export const extendService = async (id: string, pricePlan: string) => {
+export const extendService = async (data: any) => {
   try {
-    const response = await adminInstance.patch(`manager/company/${id}/${pricePlan}`)
+    const response = await adminInstance.put(`manager/queueExtend/`, data)
     return response.data
   } catch (error) {
     console.log(error)
@@ -66,7 +66,8 @@ export const uploadFiles = async (id: string, files: any) => {
     files.forEach((file: any) => {
       formData.append('files', file)
     })
-    const response = await adminInstance.post(`manager/company/${id}`, formData)
+    formData.append('id', id)
+    const response = await adminInstance.put(`manager/company/uploadContract`, formData)
     return response.data
   } catch (error) {
     console.log(error)

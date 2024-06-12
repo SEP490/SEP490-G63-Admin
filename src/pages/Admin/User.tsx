@@ -52,6 +52,7 @@ const User = () => {
   }
   function closeFileModal() {
     setFileModal(false)
+    setFiles([])
   }
   const totalMoney = useMemo(() => {
     return data.reduce((total: number, d: DataCustomer) => {
@@ -581,7 +582,7 @@ const User = () => {
                     <div className='flex items-center mt-4 justify-center'>
                       <button
                         className='mx-4 bg-teal-500 p-2 rounded-md text-center text-white hover:bg-teal-800'
-                        onClick={() => handleUpload}
+                        onClick={handleUpload}
                       >
                         Tải lên
                       </button>
